@@ -63,7 +63,7 @@ namespace VerletSim
             LinkIterationCount = 1;
             CutRadius = 8;
             TearLength = 68;
-            Cloth = new Cloth(105, 20, 11, new Vector2(8, 8));
+            Cloth = new Cloth(width: 105, height: 21, spacing: 11, new Vector2(8, 8));
         }
 
         protected override void Update(GameTime gameTime)
@@ -110,7 +110,7 @@ namespace VerletSim
                     color,
                     0,
                     new Vector2(8, 8),
-                    new Vector2(.2f, .2f),
+                    new Vector2(.4f, .4f),
                     SpriteEffects.None,
                     0);
             }
