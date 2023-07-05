@@ -101,14 +101,16 @@ namespace VerletSim
             _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, null, null);
             foreach (var vertex in Cloth.Vertices)
             {
+                var color = vertex.Pinned ? Color.Gold : Color.White;
+
                 _spriteBatch.Draw(
                     VertexTexture,
                     vertex.Position,
                     null,
-                    Color.White,
+                    color,
                     0,
                     new Vector2(8, 8),
-                    new Vector2(.4f, .4f),
+                    new Vector2(.2f, .2f),
                     SpriteEffects.None,
                     0);
             }
