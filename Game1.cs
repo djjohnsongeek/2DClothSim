@@ -62,6 +62,8 @@ namespace VerletSim
             LinkIterationCount = 1;
             CutRadius = 8;
             TearLength = 68;
+
+            // Currently cloth with more width or height than this results in some lines not being drawn
             Cloth = new Cloth(width: 105, height: 20, spacing: 11, new Vector2(8, 8));
         }
 
