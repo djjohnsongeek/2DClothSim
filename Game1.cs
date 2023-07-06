@@ -111,7 +111,7 @@ namespace VerletSim
                     color,
                     0,
                     new Vector2(8, 8),
-                    new Vector2(.4f, .4f),
+                    new Vector2(.3f, .3f),
                     SpriteEffects.None,
                     0);
             }
