@@ -1,10 +1,9 @@
-﻿using Microsoft.Xna.Framework;
+﻿using Apos.Shapes;
+using Microsoft.Xna.Framework;
 using Microsoft.Xna.Framework.Graphics;
 using Microsoft.Xna.Framework.Input;
-using System;
-using System.IO;
-using Apos.Shapes;
 using System.Collections.Generic;
+using System.IO;
 
 namespace VerletSim
 {
@@ -63,7 +62,7 @@ namespace VerletSim
             LinkIterationCount = 1;
             CutRadius = 8;
             TearLength = 68;
-            Cloth = new Cloth(width: 105, height: 21, spacing: 11, new Vector2(8, 8));
+            Cloth = new Cloth(width: 105, height: 20, spacing: 11, new Vector2(8, 8));
         }
 
         protected override void Update(GameTime gameTime)
@@ -160,6 +159,7 @@ namespace VerletSim
                         continue;
                     }
 
+                    // Shrink or grow link to maintain original dimensions
                     float adjustFactor = (lengthDiff / currentLength) * .5f;
                     Vector2 offset = new Vector2(vertexDiffs.X * adjustFactor, vertexDiffs.Y * adjustFactor);
 
@@ -189,7 +189,7 @@ namespace VerletSim
                 velocity.Y *= -1;
                 velocity *= Bounce;
                 collidedWithWall = true;
-                vertex.Position.X = BouncedXCoord(vertex);
+                vertex.Position.X = GetBouncedXCoord(vertex);
             }
 
             // Y Axis
@@ -198,7 +198,7 @@ namespace VerletSim
                 velocity.X *= -1;
                 velocity *= Bounce;
                 collidedWithWall = true;
-                vertex.Position.Y = BouncedYCoord(vertex);
+                vertex.Position.Y = GetBouncedYCoord(vertex);
             }
 
             if (collidedWithWall)
@@ -207,7 +207,7 @@ namespace VerletSim
             }
         }
 
-        private float BouncedXCoord(Vertex vertex)
+        private float GetBouncedXCoord(Vertex vertex)
         {
             if (vertex.Position.X < VertexRadius)
             {
@@ -219,7 +219,7 @@ namespace VerletSim
             }
         }
 
-        private float BouncedYCoord(Vertex vertex)
+        private float GetBouncedYCoord(Vertex vertex)
         {
             if (vertex.Position.Y < VertexRadius)
             {
@@ -236,51 +236,49 @@ namespace VerletSim
             var (index, link, distance) = GetClosestLink(mouseLocation);
             if (distance < CutRadius)
             {
-                // remove
                 link.Start = null;
                 link.End = null;
                 Cloth.RemoveLink(index);
             }
         }
 
-        private (int index, Link stick, float distance) GetClosestLink(Vector2 mouseLocation)
+        private (int index, Link link, float distance) GetClosestLink(Vector2 mouseLocation)
         {
             float smallestDistance = float.MaxValue;
-            Link nearistStick = null;
+            Link nearistLink = null;
             int nearistIndex = 0;
+
             for (int i = 0; i < Cloth.Links.Count; i++)
             {
-                var stick = Cloth.Links[i];
-                Vector2 midpoint = stick.Midpoint;
+                var link = Cloth.Links[i];
+                Vector2 midpoint = link.Midpoint;
                 float distanceFromMouse = Vector2.Distance(mouseLocation, midpoint);
 
                 if (distanceFromMouse < smallestDistance)
                 {
-                    nearistStick = stick;
+                    nearistLink = link;
                     nearistIndex = i;
                     smallestDistance = distanceFromMouse;
                 }
             }
 
-            return (nearistIndex, nearistStick, smallestDistance);
+            return (nearistIndex, nearistLink, smallestDistance);
         }
 
     }
 
     public class Vertex
     {
-        public Vertex(Vector2 pos, Vector2 velocity, bool stationary = false, float mass = 1)
+        public Vertex(Vector2 pos, Vector2 velocity, bool stationary = false)
         {
             Position = pos;
             PrevPosition = pos - velocity;
             Pinned = stationary;
-            Mass = mass;
         }
 
         public Vector2 PrevPosition;
         public Vector2 Position;
         public bool Pinned;
-        public float Mass;
         public Vector2 Velocity => Position - PrevPosition;
     }
 
@@ -310,8 +308,6 @@ namespace VerletSim
     {
         public List<Vertex> Vertices;
         public List<Link> Links;
-        public int Width;
-        public int Height;
 
         public Cloth(int width, int height, int spacing, Vector2 start)
         {
@@ -324,6 +320,7 @@ namespace VerletSim
                 {
                     var vertex = new Vertex(new Vector2(start.X + x * spacing, start.Y + y * spacing), Vector2.Zero);
 
+                    // Link to the above vertex
                     if (y > 0)
                     {
                         var top = Vertices[Vertices.Count - 1];
@@ -331,15 +328,15 @@ namespace VerletSim
                         Links.Add(topLink);
                     }
 
+                    // Link to the left vertex
                     if (x > 0)
                     {
-                        // current index - height
                         var left = Vertices[Vertices.Count - height];
                         var leftLink = new Link(left, vertex, Material.Fabric);
                         Links.Add(leftLink);
                     }
 
-                    // pin the top row
+                    // Pin the top row
                     if (y == 0)
                     {
                         vertex.Pinned = true;
