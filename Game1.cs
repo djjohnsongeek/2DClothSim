@@ -14,7 +14,7 @@ namespace VerletSim
         private ShapeBatch _shapeBatch;
 
         public Texture2D VertexTexture;
-        public Cloth Cloth;
+        public ClothData ClothData;
         public int VertexRadius;
         public float Drag;
         public float Gravity;
@@ -38,8 +38,6 @@ namespace VerletSim
             _graphics.PreferredBackBufferWidth = 1200;
             _graphics.PreferredBackBufferHeight = 800;
             _graphics.GraphicsProfile = GraphicsProfile.HiDef;
-            //_graphics.SynchronizeWithVerticalRetrace = false;
-            //IsFixedTimeStep = false;
             _graphics.ApplyChanges();
 
             base.Initialize();
@@ -63,8 +61,7 @@ namespace VerletSim
             CutRadius = 8;
             TearLength = 68;
 
-            // Currently cloth with more width or height than this results in some lines not being drawn
-            Cloth = new Cloth(width: 105, height: 20, spacing: 11, new Vector2(8, 8));
+            ClothData = new ClothData(width: 100, height: 20, spacing: 12, new Vector2(8, 8));
         }
 
         protected override void Update(GameTime gameTime)
@@ -79,8 +76,8 @@ namespace VerletSim
                 RemoveClosestLink(Mouse.GetState().Position.ToVector2());
             }
 
-            UpdateVerticies(Cloth.Vertices);
-            UpdateLinks(Cloth.Links);
+            UpdateVerticies(ClothData.Vertices);
+            UpdateLinks(ClothData.Links);
 
             base.Update(gameTime);
         }
@@ -91,7 +88,7 @@ namespace VerletSim
 
             // Draw Links
             _shapeBatch.Begin();
-            foreach (var link in Cloth.Links)
+            foreach (var link in ClothData.Links)
             {
                 _shapeBatch.DrawLine(link.Start.Position, link.End.Position, 1, Color.White, Color.White);
             }
@@ -100,7 +97,7 @@ namespace VerletSim
 
             // Draw Verticies
             _spriteBatch.Begin(SpriteSortMode.Deferred, BlendState.NonPremultiplied, SamplerState.PointClamp, null, null, null, null);
-            foreach (var vertex in Cloth.Vertices)
+            foreach (var vertex in ClothData.Vertices)
             {
                 var color = vertex.Pinned ? Color.Gold : Color.White;
 
@@ -151,7 +148,7 @@ namespace VerletSim
 
                     if (lengthDiff > TearLength)
                     {
-                        Cloth.RemoveLink(i);
+                        ClothData.RemoveLink(i);
                         continue;
                     }
 
@@ -182,7 +179,6 @@ namespace VerletSim
 
         private void ApplyScreenContraints(Vertex vertex, Vector2 velocity)
         {
-            
             bool collidedWithWall = false;
 
             // X Axis
@@ -240,7 +236,7 @@ namespace VerletSim
             {
                 link.Start = null;
                 link.End = null;
-                Cloth.RemoveLink(index);
+                ClothData.RemoveLink(index);
             }
         }
 
@@ -250,9 +246,9 @@ namespace VerletSim
             Link nearistLink = null;
             int nearistIndex = 0;
 
-            for (int i = 0; i < Cloth.Links.Count; i++)
+            for (int i = 0; i < ClothData.Links.Count; i++)
             {
-                var link = Cloth.Links[i];
+                var link = ClothData.Links[i];
                 Vector2 midpoint = link.Midpoint;
                 float distanceFromMouse = Vector2.Distance(mouseLocation, midpoint);
 
@@ -306,12 +302,12 @@ namespace VerletSim
         }
     }
 
-    public class Cloth
+    public class ClothData
     {
         public List<Vertex> Vertices;
         public List<Link> Links;
 
-        public Cloth(int width, int height, int spacing, Vector2 start)
+        public ClothData(int width, int height, int spacing, Vector2 start)
         {
             Vertices = new List<Vertex>();
             Links = new List<Link>();
